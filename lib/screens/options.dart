@@ -3,9 +3,16 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import 'inventory.dart';
 
-class Options extends StatelessWidget {
-  const Options({super.key});
+class Options extends StatefulWidget {
+  final VoidCallback toggleLogin;
 
+  const Options({super.key, required this.toggleLogin});
+
+  @override
+  State<Options> createState() => _OptionsState();
+}
+
+class _OptionsState extends State<Options> {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -33,7 +40,7 @@ class Options extends StatelessWidget {
           ),
           InkWell(
             onTap: () {
-              // Borrar login
+              widget.toggleLogin();
             },
             borderRadius: BorderRadius.circular(12.0),
             child: Card(

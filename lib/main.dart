@@ -62,12 +62,6 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  void toggleLogin() {
-    setState(() {
-      isLogged = !isLogged;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -98,16 +92,29 @@ class _MyAppState extends State<MyApp> {
       ),
       home:
           isLogged
-              ? const MyHomePage(title: '[ Tech HUB ]')
-              : Login(toggleLogin: toggleLogin),
+              ? MyHomePage(title: '[ Tech HUB ]', toggleLogin: _toggleLogin)
+              : Login(toggleLogin: _toggleLogin),
     );
+  }
+
+  void _toggleLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      if (isLogged == false) {
+        isLogged = true;
+      } else {
+        isLogged = false;
+        prefs.remove('user');
+      }
+    });
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, required this.toggleLogin});
 
   final String title;
+  final VoidCallback toggleLogin;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -115,8 +122,13 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
+  late List<Widget> _widgetOptions;
 
-  static const List<Widget> _widgetOptions = <Widget>[Home(), Options()];
+  @override
+  void initState() {
+    super.initState();
+    _widgetOptions = <Widget>[Home(), Options(toggleLogin: widget.toggleLogin)];
+  }
 
   void _onItemTapped(int index) {
     setState(() {
