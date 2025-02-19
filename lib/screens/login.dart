@@ -31,8 +31,10 @@ class LoginState extends State<Login> {
       );
 
       if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        final user = responseBody['user'];
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('user', response.body);
+        await prefs.setString('user', jsonEncode(user));
         widget.toggleLogin();
       } else {
         setState(() {

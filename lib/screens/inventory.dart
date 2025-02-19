@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class Inventory extends StatefulWidget {
   const Inventory({super.key});
+
   @override
   State<Inventory> createState() => _InventoryState();
 }
@@ -33,7 +34,7 @@ class _InventoryState extends State<Inventory> {
         }
         String timestamp = DateTime.now().toString();
         _history.add(
-          'Añadido: $item, Cantidad: $_quantity, Fecha y Hora: $timestamp',
+          '+ Añadido: $item, Cantidad: $_quantity, Fecha y Hora: $timestamp',
         );
         _controller.clear();
         _quantity = 1;
@@ -56,7 +57,7 @@ class _InventoryState extends State<Inventory> {
           }
           String timestamp = DateTime.now().toString();
           _history.add(
-            'Retirado: $item, Cantidad: $_quantity, Equipo: $_selectedTeam, Fecha y Hora: $timestamp',
+            '- Retirado: $item, Cantidad: $_quantity, Equipo: $_selectedTeam, Fecha y Hora: $timestamp',
           );
         }
         _controller.clear();
@@ -68,6 +69,7 @@ class _InventoryState extends State<Inventory> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
         title: const Text('Inventario'),
         backgroundColor: const Color(0xFF1b1b1f),
@@ -80,26 +82,17 @@ class _InventoryState extends State<Inventory> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               _buildInputSection(),
               const SizedBox(height: 16),
-              const Text(
-                'Lista de Materiales',
-                style: TextStyle(fontSize: 20, color: Colors.white),
-              ),
-              const SizedBox(height: 8),
+              _buildSectionTitle('Lista de Materiales'),
               _buildSearchField(_searchController, 'Buscar en materiales'),
-              const SizedBox(height: 8),
               _buildStockList(),
               const SizedBox(height: 16),
-              const Text(
-                'Historial',
-                style: TextStyle(fontSize: 20, color: Colors.white),
-              ),
-              const SizedBox(height: 8),
+              _buildSectionTitle('Historial'),
               Row(
                 children: [
                   Expanded(
@@ -121,7 +114,6 @@ class _InventoryState extends State<Inventory> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
               _buildHistoryList(),
             ],
           ),
@@ -130,182 +122,160 @@ class _InventoryState extends State<Inventory> {
     );
   }
 
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(
+        title,
+        style: const TextStyle(fontSize: 20, color: Colors.white),
+      ),
+    );
+  }
+
   Widget _buildInputSection() {
     return Card(
       color: Colors.grey[900],
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+      elevation: 6,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             TextField(
               controller: _controller,
               decoration: const InputDecoration(
                 labelText: 'Item',
-                fillColor: Color.fromARGB(255, 29, 29, 29),
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
               ),
+              style: const TextStyle(color: Colors.white),
             ),
             const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.remove, color: Colors.white),
-                  onPressed:
-                      () => setState(
-                        () => _quantity = (_quantity > 1) ? _quantity - 1 : 1,
-                      ),
-                ),
-                Text(
-                  '$_quantity',
-                  style: const TextStyle(fontSize: 18, color: Colors.white),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add, color: Colors.white),
-                  onPressed: () => setState(() => _quantity++),
-                ),
-              ],
-            ),
+            _buildQuantitySelector(),
             const SizedBox(height: 10),
-            DropdownButton<String>(
-              value: _selectedTeam,
-              dropdownColor: Colors.black,
-              onChanged:
-                  (String? newValue) =>
-                      setState(() => _selectedTeam = newValue!),
-              items:
-                  ['AXON', 'COM 1', 'COM 2', 'COM 3', 'ADMIN'].map((
-                    String value,
-                  ) {
-                    return DropdownMenuItem(
-                      value: value,
-                      child: Text(
-                        value,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    );
-                  }).toList(),
-            ),
+            _buildDropdownTeamSelector(),
             const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: _addItem,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                  ),
-                  child: const Text(
-                    'Añadir',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: _removeItem,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  child: const Text(
-                    'Retirar',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
+            _buildActionButtons(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSearchField(TextEditingController controller, String hintText) {
+  Widget _buildQuantitySelector() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.remove, color: Colors.white),
+          onPressed:
+              () => setState(
+                () => _quantity = (_quantity > 1) ? _quantity - 1 : 1,
+              ),
+        ),
+        Text(
+          '$_quantity',
+          style: const TextStyle(fontSize: 18, color: Colors.white),
+        ),
+        IconButton(
+          icon: const Icon(Icons.add, color: Colors.white),
+          onPressed: () => setState(() => _quantity++),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdownTeamSelector() {
+    return DropdownButton<String>(
+      value: _selectedTeam,
+      dropdownColor: Colors.black,
+      onChanged:
+          (String? newValue) => setState(() => _selectedTeam = newValue!),
+      items:
+          ['AXON', 'COM 1', 'COM 2', 'COM 3', 'ADMIN'].map((String value) {
+            return DropdownMenuItem(
+              value: value,
+              child: Text(value, style: const TextStyle(color: Colors.white)),
+            );
+          }).toList(),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        ElevatedButton.icon(
+          onPressed: _addItem,
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+          icon: const Icon(Icons.add),
+          label: const Text('Añadir', style: TextStyle(color: Colors.white)),
+        ),
+        ElevatedButton.icon(
+          onPressed: _removeItem,
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          icon: const Icon(Icons.remove),
+          label: const Text('Retirar', style: TextStyle(color: Colors.white)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchField(TextEditingController controller, String hint) {
     return TextField(
       controller: controller,
       decoration: InputDecoration(
-        border: const OutlineInputBorder(),
-        labelText: hintText,
-        fillColor: Color.fromARGB(255, 29, 29, 29),
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 10,
-          horizontal: 10,
+        hintText: hint,
+        hintStyle: const TextStyle(color: Colors.white54),
+        filled: true,
+        fillColor: Colors.grey[800],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8.0),
+          borderSide: BorderSide.none,
         ),
       ),
-      onChanged: (value) {
-        setState(() {});
-      },
+      style: const TextStyle(color: Colors.white),
     );
   }
 
   Widget _buildStockList() {
-    return SizedBox(
-      height: 200, // Altura máxima para la lista de materiales
-      child: Card(
-        color: const Color.fromARGB(255, 29, 29, 29),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        child: ListView.builder(
-          shrinkWrap: true,
-          physics: const AlwaysScrollableScrollPhysics(),
-          itemCount: _stockList.length,
-          itemBuilder: (context, index) {
-            if (_stockList[index]['item'].contains(
-              _searchController.text.toLowerCase(),
-            )) {
-              return ListTile(
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${_stockList[index]['item']}',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    Text(
-                      '${_stockList[index]['quantity']}',
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                  ],
-                ),
-              );
-            } else {
-              return Container();
-            }
-          },
-        ),
-      ),
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _stockList.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(
+            _stockList[index]['item'],
+            style: const TextStyle(color: Colors.white),
+          ),
+          trailing: Text(
+            'Cantidad: ${_stockList[index]['quantity']}',
+            style: const TextStyle(color: Colors.white),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildHistoryList() {
-    return SizedBox(
-      height: 200, // Altura máxima para la lista de historial
-      child: Card(
-        color: const Color.fromARGB(255, 29, 29, 29),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        child: ListView.builder(
-          shrinkWrap: true,
-          physics: const AlwaysScrollableScrollPhysics(),
-          itemCount: _history.length,
-          itemBuilder: (context, index) {
-            if (_history[index].toLowerCase().contains(
-                  _historySearchController.text.toLowerCase(),
-                ) &&
-                _history[index].contains(_dateSearchController.text) &&
-                _history[index].toLowerCase().contains(
-                  _teamSearchController.text.toLowerCase(),
-                )) {
-              return ListTile(
-                title: Text(
-                  _history[index],
-                  style: const TextStyle(color: Colors.white),
-                ),
-              );
-            } else {
-              return Container();
-            }
-          },
-        ),
-      ),
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _history.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(
+            _history[index],
+            style: const TextStyle(color: Colors.white),
+          ),
+        );
+      },
     );
   }
 }

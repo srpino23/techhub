@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import 'inventory.dart';
+import 'task.dart';
 
 class Options extends StatefulWidget {
   final VoidCallback toggleLogin;
@@ -48,6 +49,22 @@ class _OptionsState extends State<Options> {
               child: Center(
                 child: Icon(
                   LucideIcons.logOut,
+                  color: Color(0xFFf56565),
+                  size: 40,
+                ),
+              ),
+            ),
+          ),
+          InkWell(
+            onTap: () {
+              Navigator.of(context).push(_createRoute(const Task()));
+            },
+            borderRadius: BorderRadius.circular(12.0),
+            child: Card(
+              color: Color(0xFF1b1b1f),
+              child: Center(
+                child: Icon(
+                  LucideIcons.clipboardCheck,
                   color: Color(0xFFf56565),
                   size: 40,
                 ),

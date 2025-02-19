@@ -1,65 +1,42 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class Home extends StatefulWidget {
-  const Home({super.key});
-
-  @override
-  HomeState createState() => HomeState();
-}
-
-class HomeState extends State<Home> {
-  List<dynamic> cameras = [];
-  String? user;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchCameras();
-  }
-
-  Future<void> fetchCameras() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    user = prefs.getString('user');
-    if (user != null) {
-      final userData = json.decode(user!);
-      debugPrint(userData['team']);
-      final response = await http.get(
-        Uri.parse(
-          'http://74280601d366.sn.mynetname.net:2300/api/camera/getCameras',
-        ),
-      );
-      if (response.statusCode == 200) {
-        setState(() {
-          cameras =
-              json
-                  .decode(response.body)
-                  .where(
-                    (camera) =>
-                        camera['status'] == 'offline' &&
-                        camera['liable'].toString().toLowerCase() ==
-                            userData['team'].toString().toLowerCase(),
-                  )
-                  .toList();
-        });
-      } else {
-        throw Exception('Failed to load cameras');
-      }
-    } else {
-      throw Exception('User data is null');
-    }
-  }
+class Task extends StatelessWidget {
+  const Task({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final List<Map<String, String>> data = [
+      {
+        'title': 'Acomodar Visual',
+        'location': 'San Martin',
+        'changes': 'Actualización de UI',
+        'status': 'Pendiente',
+      },
+      {
+        'title': 'Acomodar Visual',
+        'location': 'San Martin',
+        'changes': 'Actualización de UI',
+        'status': 'Pendiente',
+      },
+    ];
+
     return Scaffold(
+      backgroundColor: const Color(0xFF121212),
+      appBar: AppBar(
+        title: const Text('Tareas Pendientes'),
+        backgroundColor: const Color(0xFF1b1b1f),
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView.builder(
-          itemCount: cameras.length,
+          itemCount: data.length,
           itemBuilder: (context, index) {
             return Card(
               color: const Color(0xFF1b1b1f),
@@ -75,7 +52,7 @@ class HomeState extends State<Home> {
                           child: Container(
                             margin: const EdgeInsets.only(right: 8.0),
                             child: Text(
-                              cameras[index]['name'],
+                              '${data[index]['title']}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -92,7 +69,7 @@ class HomeState extends State<Home> {
                             borderRadius: BorderRadius.circular(4.0),
                           ),
                           child: Text(
-                            "Fuera de linea",
+                            '${data[index]['status']}',
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -104,24 +81,19 @@ class HomeState extends State<Home> {
                     const SizedBox(height: 8.0),
                     Row(
                       children: [
-                        const Icon(LucideIcons.network, color: Colors.white),
+                        const Icon(LucideIcons.mapPin, color: Colors.white),
                         const SizedBox(width: 4.0),
                         Text(
-                          '${cameras[index]['ip']}',
+                          '${data[index]['location']}',
                           style: const TextStyle(color: Colors.white),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8.0),
-                    Row(
-                      children: [
-                        const Icon(LucideIcons.video, color: Colors.white),
-                        const SizedBox(width: 4.0),
-                        Text(
-                          _translateCameraType(cameras[index]['type']),
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ],
+                    const Divider(color: Colors.white),
+                    Text(
+                      '${data[index]['changes']}',
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ],
                 ),
@@ -131,20 +103,5 @@ class HomeState extends State<Home> {
         ),
       ),
     );
-  }
-
-  String _translateCameraType(String type) {
-    switch (type) {
-      case 'Dome':
-        return 'Domo';
-      case 'Fixed':
-        return 'Fija';
-      case 'LPR':
-        return 'LPR';
-      case 'Button':
-        return 'Botón';
-      default:
-        return type;
-    }
   }
 }
