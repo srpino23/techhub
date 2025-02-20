@@ -39,6 +39,7 @@ class NewReportState extends State<NewReport> {
     'Tornillos',
     'Cinta aisladora',
   ];
+  bool _isLoadingLocation = false;
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
@@ -53,6 +54,9 @@ class NewReportState extends State<NewReport> {
   }
 
   Future<void> _assignAutomaticLocation() async {
+    setState(() {
+      _isLoadingLocation = true;
+    });
     bool serviceEnabled;
     PermissionStatus permissionGranted;
 
@@ -112,6 +116,9 @@ class NewReportState extends State<NewReport> {
         ),
       );
     }
+    setState(() {
+      _isLoadingLocation = false;
+    });
   }
 
   void _addSupplyField() {
@@ -176,9 +183,16 @@ class NewReportState extends State<NewReport> {
                   ),
                   const SizedBox(height: 10),
                   ElevatedButton.icon(
-                    onPressed: _assignAutomaticLocation,
-                    icon: const Icon(Icons.my_location),
-                    label: const Text('Asignar Ubicación Automáticamente'),
+                    onPressed:
+                        _isLoadingLocation ? null : _assignAutomaticLocation,
+                    icon:
+                        _isLoadingLocation
+                            ? const CircularProgressIndicator()
+                            : const Icon(Icons.my_location),
+                    label:
+                        _isLoadingLocation
+                            ? const Text('')
+                            : const Text('Asignar Ubicación Automáticamente'),
                   ),
                   const SizedBox(height: 20),
 

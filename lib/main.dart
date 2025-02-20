@@ -29,6 +29,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool isLogged = false;
+  bool isLoading = true; // Añadir esta línea
   final LocalAuthentication auth = LocalAuthentication();
 
   @override
@@ -60,6 +61,9 @@ class _MyAppState extends State<MyApp> {
         }
       }
     }
+    setState(() {
+      isLoading = false; // Añadir esta línea
+    });
   }
 
   @override
@@ -91,7 +95,11 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
       home:
-          isLogged
+          isLoading // Añadir esta línea
+              ? const Center(
+                child: CircularProgressIndicator(),
+              ) // Añadir esta línea
+              : isLogged
               ? MyHomePage(title: '[ Tech HUB ]', toggleLogin: _toggleLogin)
               : Login(toggleLogin: _toggleLogin),
     );

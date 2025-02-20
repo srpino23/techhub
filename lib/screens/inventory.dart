@@ -12,8 +12,7 @@ class _InventoryState extends State<Inventory> {
   final List<String> _history = [];
   final TextEditingController _controller = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
-  final TextEditingController _historySearchController =
-      TextEditingController();
+  final TextEditingController _historySearchController = TextEditingController();
   final TextEditingController _dateSearchController = TextEditingController();
   final TextEditingController _teamSearchController = TextEditingController();
 
@@ -21,49 +20,57 @@ class _InventoryState extends State<Inventory> {
   String _selectedTeam = 'AXON';
 
   void _addItem() {
-    setState(() {
-      if (_controller.text.isNotEmpty) {
+    if (_controller.text.isNotEmpty) {
+      setState(() {
         String item = _controller.text.toLowerCase();
-        int index = _stockList.indexWhere(
-          (element) => element['item'].toLowerCase() == item,
-        );
+        int index = _stockList.indexWhere((element) => element['item'].toLowerCase() == item);
         if (index != -1) {
           _stockList[index]['quantity'] += _quantity;
         } else {
           _stockList.add({'item': item, 'quantity': _quantity});
         }
-        String timestamp = DateTime.now().toString();
-        _history.add(
-          '+ Añadido: $item, Cantidad: $_quantity, Fecha y Hora: $timestamp',
-        );
+        _history.add('+ Añadido: $item, Cantidad: $_quantity, Fecha y Hora: ${DateTime.now()}');
         _controller.clear();
         _quantity = 1;
-      }
-    });
+      });
+    }
   }
 
   void _removeItem() {
-    setState(() {
-      if (_controller.text.isNotEmpty) {
+    if (_controller.text.isNotEmpty) {
+      setState(() {
         String item = _controller.text.toLowerCase();
-        int index = _stockList.indexWhere(
-          (element) => element['item'].toLowerCase() == item,
-        );
+        int index = _stockList.indexWhere((element) => element['item'].toLowerCase() == item);
         if (index != -1) {
           if (_stockList[index]['quantity'] > _quantity) {
             _stockList[index]['quantity'] -= _quantity;
           } else {
             _stockList.removeAt(index);
           }
-          String timestamp = DateTime.now().toString();
-          _history.add(
-            '- Retirado: $item, Cantidad: $_quantity, Equipo: $_selectedTeam, Fecha y Hora: $timestamp',
-          );
+          _history.add('- Retirado: $item, Cantidad: $_quantity, Equipo: $_selectedTeam, Fecha y Hora: ${DateTime.now()}');
         }
         _controller.clear();
         _quantity = 1;
-      }
-    });
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> _filteredStockList() {
+    String query = _searchController.text.toLowerCase();
+    return _stockList.where((item) => item['item'].toLowerCase().contains(query)).toList();
+  }
+
+  List<String> _filteredHistory() {
+    String materialQuery = _historySearchController.text.toLowerCase();
+    String dateQuery = _dateSearchController.text;
+    String teamQuery = _teamSearchController.text.toLowerCase();
+
+    return _history.where((entry) {
+      bool matchesMaterial = materialQuery.isEmpty || entry.toLowerCase().contains(materialQuery);
+      bool matchesDate = dateQuery.isEmpty || entry.contains(dateQuery);
+      bool matchesTeam = teamQuery.isEmpty || entry.toLowerCase().contains(teamQuery);
+      return matchesMaterial && matchesDate && matchesTeam;
+    }).toList();
   }
 
   @override
@@ -95,23 +102,11 @@ class _InventoryState extends State<Inventory> {
               _buildSectionTitle('Historial'),
               Row(
                 children: [
-                  Expanded(
-                    child: _buildSearchField(
-                      _historySearchController,
-                      'Material',
-                    ),
-                  ),
+                  Expanded(child: _buildSearchField(_historySearchController, 'Material')),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildSearchField(
-                      _dateSearchController,
-                      'Fecha (YYYY-MM-DD)',
-                    ),
-                  ),
+                  Expanded(child: _buildSearchField(_dateSearchController, 'Fecha (YYYY-MM-DD)')),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildSearchField(_teamSearchController, 'Equipo'),
-                  ),
+                  Expanded(child: _buildSearchField(_teamSearchController, 'Equipo')),
                 ],
               ),
               _buildHistoryList(),
@@ -173,15 +168,9 @@ class _InventoryState extends State<Inventory> {
       children: [
         IconButton(
           icon: const Icon(Icons.remove, color: Colors.white),
-          onPressed:
-              () => setState(
-                () => _quantity = (_quantity > 1) ? _quantity - 1 : 1,
-              ),
+          onPressed: () => setState(() => _quantity = (_quantity > 1) ? _quantity - 1 : 1),
         ),
-        Text(
-          '$_quantity',
-          style: const TextStyle(fontSize: 18, color: Colors.white),
-        ),
+        Text('$_quantity', style: const TextStyle(fontSize: 18, color: Colors.white)),
         IconButton(
           icon: const Icon(Icons.add, color: Colors.white),
           onPressed: () => setState(() => _quantity++),
@@ -194,15 +183,13 @@ class _InventoryState extends State<Inventory> {
     return DropdownButton<String>(
       value: _selectedTeam,
       dropdownColor: Colors.black,
-      onChanged:
-          (String? newValue) => setState(() => _selectedTeam = newValue!),
-      items:
-          ['AXON', 'COM 1', 'COM 2', 'COM 3', 'ADMIN'].map((String value) {
-            return DropdownMenuItem(
-              value: value,
-              child: Text(value, style: const TextStyle(color: Colors.white)),
-            );
-          }).toList(),
+      onChanged: (String? newValue) => setState(() => _selectedTeam = newValue!),
+      items: ['AXON', 'COM 1', 'COM 2', 'COM 3', 'ADMIN'].map((String value) {
+        return DropdownMenuItem(
+          value: value,
+          child: Text(value, style: const TextStyle(color: Colors.white)),
+        );
+      }).toList(),
     );
   }
 
@@ -240,6 +227,7 @@ class _InventoryState extends State<Inventory> {
         ),
       ),
       style: const TextStyle(color: Colors.white),
+      onChanged: (value) => setState(() {}),
     );
   }
 
@@ -247,17 +235,12 @@ class _InventoryState extends State<Inventory> {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: _stockList.length,
+      itemCount: _filteredStockList().length,
       itemBuilder: (context, index) {
+        var item = _filteredStockList()[index];
         return ListTile(
-          title: Text(
-            _stockList[index]['item'],
-            style: const TextStyle(color: Colors.white),
-          ),
-          trailing: Text(
-            'Cantidad: ${_stockList[index]['quantity']}',
-            style: const TextStyle(color: Colors.white),
-          ),
+          title: Text(item['item'], style: const TextStyle(color: Colors.white)),
+          trailing: Text('Cantidad: ${item['quantity']}', style: const TextStyle(color: Colors.white)),
         );
       },
     );
@@ -267,13 +250,10 @@ class _InventoryState extends State<Inventory> {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: _history.length,
+      itemCount: _filteredHistory().length,
       itemBuilder: (context, index) {
         return ListTile(
-          title: Text(
-            _history[index],
-            style: const TextStyle(color: Colors.white),
-          ),
+          title: Text(_filteredHistory()[index], style: const TextStyle(color: Colors.white)),
         );
       },
     );

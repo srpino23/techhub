@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -14,11 +15,15 @@ class Home extends StatefulWidget {
 class HomeState extends State<Home> {
   List<dynamic> cameras = [];
   String? user;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
     fetchCameras();
+    Timer.periodic(Duration(seconds: 5), (timer) {
+      fetchCameras();
+    });
   }
 
   Future<void> fetchCameras() async {
@@ -44,6 +49,7 @@ class HomeState extends State<Home> {
                             userData['team'].toString().toLowerCase(),
                   )
                   .toList();
+          isLoading = false;
         });
       } else {
         throw Exception('Failed to load cameras');
